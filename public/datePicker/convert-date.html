@@ -1,0 +1,514 @@
+<html dir="rtl"><head>
+<title>تبديل تاريخ </title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta content="ALL" name="ROBOTS">
+				<script language="JavaScript" type="text/javascript">
+
+
+var grgSumOfDays=Array(Array(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365),Array(0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366));
+var hshSumOfDays=Array(Array(0, 31, 62, 93, 124, 155, 186, 216, 246, 276, 306, 336, 365), Array(0, 31, 62, 93, 124, 155, 186, 216, 246, 276, 306, 336, 366));
+
+function ToShamsi(grgYear,grgMonth,grgDay,Format)
+{
+	var hshYear = grgYear-621;
+	var hshMonth,hshDay;
+	
+	var grgLeap=grgIsLeap (grgYear);
+	var hshLeap=hshIsLeap (hshYear-1);
+	
+	var hshElapsed;
+	var grgElapsed = grgSumOfDays[(grgLeap ? 1:0)][grgMonth-1]+grgDay;
+
+	var XmasToNorooz = (hshLeap && grgLeap) ? 80 : 79;
+
+	if (grgElapsed <= XmasToNorooz)
+	{
+		hshElapsed = grgElapsed+286;
+		hshYear--;
+		if (hshLeap && !grgLeap)
+			hshElapsed++;
+	}
+	else
+	{
+		hshElapsed = grgElapsed - XmasToNorooz;
+		hshLeap = hshIsLeap (hshYear);
+	}
+
+	for (var i=1; i <= 12 ; i++)
+	{
+		if (hshSumOfDays [(hshLeap ? 1:0)][i] >= hshElapsed)
+		{
+			hshMonth = i;
+			hshDay = hshElapsed - hshSumOfDays [(hshLeap ? 1:0)][i-1];
+			break;
+		}
+	}
+
+
+	if (Format=="Long")
+		return hshDayName (hshDayOfWeek(hshYear,hshMonth,hshDay)) + "  " + hshDay + " " + calNames("hf", hshMonth-1) + " " + hshYear;
+	else
+		return hshYear + " /" + hshMonth + " /" + hshDay;
+}
+
+
+function ToGregorian (hshYear,hshMonth,hshDay)
+{
+	var grgYear = hshYear+621;
+	var grgMonth,grgDay;
+
+	var hshLeap=hshIsLeap (hshYear);
+	var grgLeap=grgIsLeap (grgYear);
+
+	var hshElapsed=hshSumOfDays [hshLeap ? 1:0][hshMonth-1]+hshDay;
+	var grgElapsed;
+
+	if (hshMonth > 10 || (hshMonth == 10 && hshElapsed > 286+(grgLeap ? 1:0)))
+	{
+		grgElapsed = hshElapsed - (286 + (grgLeap ? 1:0));
+		grgLeap = grgIsLeap (++grgYear);
+	}
+	else
+	{
+		hshLeap = hshIsLeap (hshYear-1);
+		grgElapsed = hshElapsed + 79 + (hshLeap ? 1:0) - (grgIsLeap(grgYear-1) ? 1:0);
+	}
+
+	for (var i=1; i <= 12; i++)
+	{
+		if (grgSumOfDays [grgLeap ? 1:0][i] >= grgElapsed)
+		{
+			grgMonth = i;
+			grgDay = grgElapsed - grgSumOfDays [grgLeap ? 1:0][i-1];
+			break;
+		}
+	}
+
+	return grgYear+"-"+grgMonth+"-"+grgDay;
+}
+
+function grgIsLeap (Year)
+{
+	return ((Year%4) == 0 && ((Year%100) != 0 || (Year%400) == 0));
+}
+
+function hshIsLeap (Year)
+{
+	Year = (Year - 474) % 128;
+	Year = ((Year >= 30) ? 0 : 29) + Year;
+	Year = Year - Math.floor(Year/33) - 1;
+	return ((Year % 4) == 0);
+}
+
+
+function hshDayOfWeek(hshYear, hshMonth, hshDay)
+{
+	var value;
+	value = hshYear - 1376 + hshSumOfDays[0][hshMonth-1] + hshDay - 1;
+
+	for (var i=1380; i<hshYear; i++)
+		if (hshIsLeap(i)) value++;
+	for (var i=hshYear; i<1380; i++)
+		if (hshIsLeap(i)) value--;
+
+	value=value%7;
+	if (value<0) value=value+7;
+
+	return (value);
+}
+
+function hshDayName(DayOfWeek)
+{
+	return calNames("df", DayOfWeek%7);
+}
+
+ function calNames(calendarName, monthNo)
+ {
+  switch (calendarName)
+ {
+   case "hf": return Array("فروردين", "ارديبهشت", "خرداد", "تير", "مرداد", "شهريور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند")[monthNo];
+   case "ge": return Array(" January ", " February ", " March ", " April ", " May ", " June ", " July ", " August ", " September ", " October ", " November ", " December ")[monthNo];
+   case "gf": return Array("ژانویه", "فوریه", "مارس", "آوریل", "مه", "ژوثن", "ژوییه", "اوت", "سپتامبر", "اكتبر", "نوامبر", "دسامبر")[monthNo];
+   case "df": return Array("شنبه", "یک‌شنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه", "جمعه")[monthNo];
+   case "de": return Array("Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday")[monthNo];
+   }
+  }
+				</script>
+				<script language="JavaScript" type="text/javascript">
+
+function UpdateCalendar(targetId, gregorianMonths, year, month)
+{
+	var newRow, newCell;
+	var currentDay=1;
+	var holidays=getHolidays(year, month);
+	var lastDay=31;
+	var dtToday=new Date();
+	var strToday=dtToday.getFullYear()+"-"+(dtToday.getMonth()+1)+"-"+dtToday.getDate();
+
+	if (month>6) lastDay--;
+	if (month==12 && !hshIsLeap(year)) lastDay--;
+
+
+	while (targetId.rows.length>0) targetId.deleteRow(0);
+
+
+	newRow=targetId.insertRow(0);
+	for (var i=0; i<hshDayOfWeek(year,month,1); i++) newRow.insertCell(-1).innerHTML=" ";
+	for (var i=hshDayOfWeek(year,month,1); i<7; i++) {
+		newCell=newRow.insertCell(-1);
+		newCell.className="normalDay";
+		newCell.innerHTML="<p class=ShamsiDayNo>" + currentDay + "</p><p dir=ltr class=GregorianDayNo>" + ToGregorian(year,month,currentDay).split("-")[2];
+		if (holidays.substr(currentDay-1,1)=="x") newCell.className="Holiday";
+		if (ToGregorian(year, month, currentDay)==strToday) newCell.className="Today";
+		currentDay++;
+		}
+
+	while (currentDay<=lastDay) {
+		newRow=targetId.insertRow(-1);
+		for (var i=0; i<7; i++) {
+			newCell=newRow.insertCell(-1);
+			newCell.innerHTML="<p class=ShamsiDayNo>" + currentDay + "</p><p dir=ltr class=GregorianDayNo>" + ToGregorian(year,month,currentDay).split("-")[2];
+			newCell.className="normalDay";
+			if (holidays.substr(currentDay-1,1)=="x") newCell.className="Holiday";
+			if (ToGregorian(year, month, currentDay)==strToday) newCell.className="Today";
+			currentDay++;
+			if (currentDay>lastDay) break;
+			}
+		}
+	for (var i=newRow.cells.length; i<7; i++) newRow.insertCell(-1).innerHTML=" ";
+
+	if (gregorianMonths != null) {
+		gregorianMonths.getElementsByTagName('p')[0].innerHTML=calNames("ge", ToGregorian (year,month,1).split("-")[1]-1)+" "+(ToGregorian (year,month,1).split("-")[0])+" - "+calNames("ge", ToGregorian (year,month,30).split("-")[1]-1)+" "+ToGregorian (year,month,30).split("-")[0];
+		gregorianMonths.getElementsByTagName('p')[1].innerHTML=calNames("gf", ToGregorian (year,month,1).split("-")[1]-1)+" "+(ToGregorian (year,month,1).split("-")[0])+" - "+calNames("gf", ToGregorian (year,month,30).split("-")[1]-1)+" "+ToGregorian (year,month,30).split("-")[0];
+		}
+}
+
+function FillSelectWithMonthNames(targetId)
+{
+	for (var i=0; i<12; i++) {
+		var mitem = document.createElement("OPTION");
+		mitem.value=i+1;
+		mitem.text=calNames("hf", i);
+		targetId.options.add(mitem);
+		}
+}
+
+function getHolidays(year, month)
+{
+ switch (year) {
+  case 1380: return Array("xxxx56789x1xx4xxx890123x567890x", "123456x890123x567890x234567x901", "x2xx567890x23xx67x9x1234x678901", "x234567x901234x678901x345678x01", "1234x678901x345678x012345x78901", "xx345678x012345x789012x456789x1", "12345x78x012x456789x12x456x890", "123x56789xx234567x901234x67890", "1x345678x012345x789012x45x789x", "123456x890123x56789xx234567x90", "1234x678901x345678x01x345x7890", "12xx56789x1x3456x890123x5678x")[month-1];
+  case 1381: return Array("xxxxx678x01xx45x789012x456789x1", "12345x789012x456789xx2x456x8901", "12x45678xx123xx6x890123x567890x", "123456x890123x567890x234567x901", "123x567890x234567x90x234x678901", "x234567x901234x678901x345678xx1", "1234x678901xx45678x012345x789x", "12x456789x123456x890123x567890", "x234x67x901234x678901x345678x0", "12345x78x012x456789x123456x890", "123x567890x234567x901xx4x67890", "xx345678x012345x78901xx45678x")[month-1];
+  case 1382: return Array("xxxx567x901xx4x678901x345678x01", "12x4x67890xx345678x012345x78x01", "1x345678x0123xxx789012x456789x1", "12345x789012x456789x123456x8901", "12x456789xx23456x890123x567890x", "123456x890123x5678x0x234567x901", "1x3x567890x234567x9x1234x67890", "1x345678x012345x789012x4x6789x", "1234x6x890123x567890x234567xx0", "1234x678901x345678x012345x7890", "12x456789x12x456x890xx3x567890", "x234567x90xx34x678901x345678x")[month-1];
+  case 1383: return Array("xxxx56x8901xxx567890x234567x901", "123x567890x234567x901234x678901", "x234567x90123xx678901x345678x01", "1234x678901x345678x012345x78901", "1x345678x012345x789012x456789x1", "12345x789012x456789x123456x8901", "12x456789x123456x890123x567890", "x234567x901234x678901x345678x0", "12345x789012x456789x123456x890", "123x567890x234567x901234x67890", "1x345678x012345x78901xx456789x", "123456x890123x567890x234567xx0")[month-1];
+  }
+}
+
+				</script>
+				<script language="JavaScript" type="text/javascript">
+ function switchCalendar()
+ {
+  var frm = document.getElementById("convert");
+  var today = new Date();
+
+  while (frm.year.options.length<100) frm.year.options.add(document.createElement("OPTION"));
+
+  while (frm.month.options.length<12) {
+   var newMonth = document.createElement("OPTION");
+   newMonth.value=frm.month.options.length+1;
+   frm.month.options.add(newMonth);
+   }
+
+  while (frm.day.options.length<31) {
+   var newDay = document.createElement("OPTION");
+   newDay.value=frm.day.options.length+1;
+   newDay.text=frm.day.options.length+1;
+   frm.day.options.add(newDay);
+   }
+
+  if (frm.calendar[0].checked) {
+   for (var i=0; i<100; i++) {
+    frm.year.options[i].text=i+1300;
+    frm.year.options[i].value=i+1300;
+    }
+
+   for (var i=0; i<12; i++) frm.month.options[i].text = calNames("hf", i);
+
+   var shToday = ToShamsi(today.getFullYear(), today.getMonth()+1, today.getDate(),'short');
+   frm.year.value=Number(shToday.split('/')[0]);
+   frm.month.value=Number(shToday.split('/')[1]);
+   frm.day.value=Number(shToday.split('/')[2]);
+   }
+  else {
+   for (var i=0; i<100; i++) {
+    frm.year.options[i].text=i+1930;
+    frm.year.options[i].value=i+1930;
+    }
+
+   for (var i=0; i<12; i++) frm.month.options[i].text = calNames("ge", i);
+
+   frm.year.value=today.getFullYear();
+   frm.month.value=today.getMonth()+1;
+   frm.day.value=today.getDate();
+   }
+
+  convertDate();
+  }
+
+
+ function convertDate() {
+  frm = document.getElementById("convert");
+
+  if (frm.calendar[0].checked) {
+   var grg=ToGregorian(parseInt(frm.year.value), parseInt(frm.month.value), parseInt(frm.day.value));
+   document.getElementById("resultDate").innerHTML = calNames("df", hshDayOfWeek(parseInt(frm.year.value), parseInt(frm.month.value), parseInt(frm.day.value)))+" "+grg.split("-")[2]+" "+calNames("gf", grg.split("-")[1]-1)+" ("+grg.split("-")[1]+") "+grg.split("-")[0];
+   document.getElementById("resultDate").innerHTML += "<br><font face='tahoma' size=3>"+calNames("de",hshDayOfWeek(parseInt(frm.year.value), parseInt(frm.month.value), parseInt(frm.day.value)))+", "+calNames("ge", grg.split("-")[1]-1)+" "+grg.split("-")[2]+", "+grg.split("-")[0]+"</font>";
+   }
+  else {
+   var hsh=ToShamsi(parseInt(frm.year.value), parseInt(frm.month.value), parseInt(frm.day.value), "Long");
+   document.getElementById("resultDate").innerHTML=hsh;
+   }
+  }
+				</script></head><body topmargin="0" bottommargin="0" leftmargin="0" rightmargin="0">
+		<div align="center"></div>
+		
+		<div align="center">
+
+			<table dir="ltr" style="border-collapse: collapse;" width="400" border="0" bordercolor="#0066cc" cellpadding="0" cellspacing="0" height="190">
+				<tbody>
+					<tr>
+						<td width="400" height="190">
+							<form id="convert" name="convert" onsubmit="return false;">
+								<table dir="ltr" style="font-size: 9pt; width: 400px; font-family: Tahoma; height: 161px; text-align: justify;"  border="0" cellpadding="3" cellspacing="1">
+									<tbody>
+										<tr  >
+											<td dir="ltr" colspan="2">
+
+												<p style="text-align: right;">
+													<span lang="fa">هجری 
+            شمسی</span><input id="cal_shamsi" onclick="switchCalendar();" value="shamsi" name="calendar" type="radio"></p>
+											</td>
+										</tr>
+										<tr  >
+											<td colspan="2">
+												<p style="text-align: right;"><span lang="fa">میلادی</span><input checked="checked" id="cal_greg" onclick="switchCalendar();" value="gregorian" name="calendar" type="radio"></p>
+											</td>
+
+										</tr>
+										<tr  >
+											<td>
+												<p style="text-align: right;"><select dir="rtl" style="border: 2px solid rgb(128, 128, 0); font-size: 11px; width: 233px; font-family: Tahoma; height: 19px;" tabindex="2" onchange="convertDate();" size="1" name="year">
+														<option value="1930">1930</option>
+														<option value="1931">1931</option>
+														<option value="1932">1932</option>
+
+														<option value="1933">1933</option>
+														<option value="1934">1934</option>
+														<option value="1935">1935</option>
+														<option value="1936">1936</option>
+														<option value="1937">1937</option>
+														<option value="1938">1938</option>
+
+														<option value="1939">1939</option>
+														<option value="1940">1940</option>
+														<option value="1941">1941</option>
+														<option value="1942">1942</option>
+														<option value="1943">1943</option>
+														<option value="1944">1944</option>
+
+														<option value="1945">1945</option>
+														<option value="1946">1946</option>
+														<option value="1947">1947</option>
+														<option value="1948">1948</option>
+														<option value="1949">1949</option>
+														<option value="1950">1950</option>
+
+														<option value="1951">1951</option>
+														<option value="1952">1952</option>
+														<option value="1953">1953</option>
+														<option value="1954">1954</option>
+														<option value="1955">1955</option>
+														<option value="1956">1956</option>
+
+														<option value="1957">1957</option>
+														<option value="1958">1958</option>
+														<option value="1959">1959</option>
+														<option value="1960">1960</option>
+														<option value="1961">1961</option>
+														<option value="1962">1962</option>
+
+														<option value="1963">1963</option>
+														<option value="1964">1964</option>
+														<option value="1965">1965</option>
+														<option value="1966">1966</option>
+														<option value="1967">1967</option>
+														<option value="1968">1968</option>
+
+														<option value="1969">1969</option>
+														<option value="1970">1970</option>
+														<option value="1971">1971</option>
+														<option value="1972">1972</option>
+														<option value="1973">1973</option>
+														<option value="1974">1974</option>
+
+														<option value="1975">1975</option>
+														<option value="1976">1976</option>
+														<option value="1977">1977</option>
+														<option value="1978">1978</option>
+														<option value="1979">1979</option>
+														<option value="1980">1980</option>
+
+														<option value="1981">1981</option>
+														<option value="1982">1982</option>
+														<option value="1983">1983</option>
+														<option value="1984">1984</option>
+														<option value="1985">1985</option>
+														<option value="1986">1986</option>
+
+														<option value="1987">1987</option>
+														<option value="1988">1988</option>
+														<option value="1989">1989</option>
+														<option value="1990">1990</option>
+														<option value="1991">1991</option>
+														<option value="1992">1992</option>
+
+														<option value="1993">1993</option>
+														<option value="1994">1994</option>
+														<option value="1995">1995</option>
+														<option value="1996">1996</option>
+														<option value="1997">1997</option>
+														<option value="1998">1998</option>
+
+														<option value="1999">1999</option>
+														<option value="2000">2000</option>
+														<option value="2001">2001</option>
+														<option value="2002">2002</option>
+														<option value="2003">2003</option>
+														<option value="2004">2004</option>
+
+														<option value="2005">2005</option>
+														<option value="2006">2006</option>
+														<option value="2007">2007</option>
+														<option selected="selected" value="2008">2008</option>
+														<option value="2009">2009</option>
+														<option value="2010">2010</option>
+
+														<option value="2011">2011</option>
+														<option value="2012">2012</option>
+														<option value="2013">2013</option>
+														<option value="2014">2014</option>
+														<option value="2015">2015</option>
+														<option value="2016">2016</option>
+
+														<option value="2017">2017</option>
+														<option value="2018">2018</option>
+														<option value="2019">2019</option>
+														<option value="2020">2020</option>
+														<option value="2021">2021</option>
+														<option value="2022">2022</option>
+
+														<option value="2023">2023</option>
+														<option value="2024">2024</option>
+														<option value="2025">2025</option>
+														<option value="2026">2026</option>
+														<option value="2027">2027</option>
+														<option value="2028">2028</option>
+
+														<option value="2029">2029</option>
+													</select></p>
+											</td>
+											<td width="25" height="19">
+												<p style="text-align: center;"><font color="#000080" size="2">سال</font></p>
+											</td>
+										</tr>
+										<tr  >
+
+											<td width="444">
+												<p style="text-align: right;"><select dir="rtl" style="font-size: 11px; width: 233px; font-family: Tahoma; height: 19px;" tabindex="2" onchange="convertDate();" size="1" name="month">
+														<option value="1"> January </option>
+														<option value="2"> February </option>
+														<option value="3"> March </option>
+														<option value="4"> April </option>
+
+														<option value="5"> May </option>
+														<option value="6"> June </option>
+														<option value="7"> July </option>
+														<option value="8"> August </option>
+														<option selected="selected" value="9"> September </option>
+
+														<option value="10"> October </option>
+														<option value="11"> November </option>
+														<option value="12"> December </option>
+													</select></p>
+											</td>
+											<td width="25" height="19">
+
+												<p style="text-align: center;"><font color="#000080" size="2">ماه</font></p>
+											</td>
+										</tr>
+										<tr  >
+											<td width="444">
+												<p style="text-align: right;"><select dir="rtl" style="font-size: 8pt; width: 233px; font-family: Tahoma; height: 19px;" tabindex="2" onchange="convertDate();" size="1" name="day">
+														<option value="1">1</option>
+														<option value="2">2</option>
+
+														<option value="3">3</option>
+														<option value="4">4</option>
+														<option value="5">5</option>
+														<option value="6">6</option>
+														<option value="7">7</option>
+														<option value="8">8</option>
+
+														<option value="9">9</option>
+														<option value="10">10</option>
+														<option value="11">11</option>
+														<option value="12">12</option>
+														<option value="13">13</option>
+														<option value="14">14</option>
+
+														<option value="15">15</option>
+														<option value="16">16</option>
+														<option value="17">17</option>
+														<option value="18">18</option>
+														<option value="19">19</option>
+														<option value="20">20</option>
+
+														<option value="21">21</option>
+														<option value="22">22</option>
+														<option value="23">23</option>
+														<option value="24">24</option>
+														<option selected="selected" value="25">25</option>
+														<option value="26">26</option>
+
+														<option value="27">27</option>
+														<option value="28">28</option>
+														<option value="29">29</option>
+														<option value="30">30</option>
+														<option value="31">31</option>
+													</select></p>
+
+											</td>
+											<td width="25" height="22">
+												<p style="text-align: center;"><font color="#000080" size="2">روز</font></p>
+											</td>
+										</tr>
+										<tr  >
+											<td id="resultDate" dir="ltr" colspan="2" style="text-align:center; font-size:17px; color:green;" width="400" height="56">پنج‌شنبه  4 مهر 1387</td>
+										</tr>
+
+										<tr  >
+											<td dir="ltr" colspan="2" >
+												&nbsp;</td>
+										</tr>
+									</tbody>
+							
+							<script language="javascript">
+    switchCalendar();
+							</script>
+						
+					
+				</table>
+			<div></div>
+
+			</form></td></tr></tbody></table>
+		</div>
+	</body></html>
